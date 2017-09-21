@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <time.h>
 #define MAGIC1 "P2"
 #define MAGIC2 "P5"
 #define MAGIC_SIZE sizeof(MAGIC1)
@@ -62,7 +63,7 @@ int parse_pgm(PIMAGE_INFO image_info) {
   int step = 0;
   image_info->position = 0;
 
-  sscanf(image_info->image, "%[^# \t\n]%n", &magic, &step);
+  sscanf(image_info->image, "%[^# \t\n]%n", magic, &step);
   image_info->position += step;
   if ((strcmp(magic, MAGIC1) != 0) && (strcmp(magic, MAGIC2) != 0)) {
     printf("Error: image has not PMG format\n");
