@@ -364,7 +364,8 @@ void error_diffusion_floyd(PIMAGE_INFO image_info,
   value = GET_PIXEL_VALUE(image_info->image[image_info->position],
     error->current_str[image_info->pix_num - 1],
     DEFAULT_THRESHOLD);
-  value_error = (unsigned char)image_info->image[image_info->position] - value;
+  value_error = (unsigned char)image_info->image[image_info->position] +
+    error->current_str[image_info->pix_num - 1] - value;
   if (back) {
     if (image_info->pix_num > 1) {
       error->current_str[image_info->pix_num - 2] += 7./16*value_error;
