@@ -266,6 +266,7 @@ void random_dithering(PIMAGE_INFO image_info, void *params) {
 }
 
 /* Error diffusion algos */
+ #define ERROR_SIZE(width) (width + 2)
 #define GET_PIXEL_VALUE(pixel, error, theshold) \
   (((unsigned char)(pixel) + (error) > (theshold))? WHITE:BLACK) \
 
@@ -324,7 +325,7 @@ void error_diffusion(PIMAGE_INFO image_info, bool back, void *diffusion_error) {
   tmp = error->current_str; \
   error->current_str = error->below_str; \
   error->below_str = tmp; \
-  for (i = 0; i < image_info->width; i++) \
+  for (i = 0; i < ERROR_SIZE(image_info->width); i++) \
     error->below_str[i] = 0; \
 } while(0); \
 
@@ -362,30 +363,24 @@ void error_diffusion_floyd(PIMAGE_INFO image_info,
   int value_error = 0;
 
   value = GET_PIXEL_VALUE(image_info->image[image_info->position],
-    error->current_str[image_info->pix_num - 1],
+    error->current_str[image_info->pix_num],
     DEFAULT_THRESHOLD);
   value_error = (unsigned char)image_info->image[image_info->position] +
-    error->current_str[image_info->pix_num - 1] - value;
+    error->current_str[image_info->pix_num] - value;
   if (back) {
-    if (image_info->pix_num > 1) {
-      error->current_str[image_info->pix_num - 2] += 7./16*value_error;
-      error->below_str[image_info->pix_num - 2] += 1./16*value_error;
-    }
-    error->below_str[image_info->pix_num - 1] += 5./16*value_error;
-    if (image_info->pix_num < image_info->width)
-      error->below_str[image_info->pix_num] += 3./16*value_error;
+    error->current_str[image_info->pix_num - 1] += 7./16*value_error;
+    error->below_str[image_info->pix_num - 1] += 1./16*value_error;
+    error->below_str[image_info->pix_num] += 5./16*value_error;
+    error->below_str[image_info->pix_num + 1] += 3./16*value_error;
 
     if (image_info->pix_num == 1) {
       UPDATE_ERROR_FLOYD
     }
   } else {
-    if (image_info->pix_num < image_info->width) {
-      error->current_str[image_info->pix_num] += 7./16*value_error;
-      error->below_str[image_info->pix_num] += 1./16*value_error;
-    }
-    error->below_str[image_info->pix_num - 1] += 5./16*value_error;
-    if (image_info->pix_num > 1)
-      error->below_str[image_info->pix_num - 2] += 3./16*value_error;
+    error->current_str[image_info->pix_num + 1] += 7./16*value_error;
+    error->below_str[image_info->pix_num + 1] += 1./16*value_error;
+    error->below_str[image_info->pix_num] += 5./16*value_error;
+    error->below_str[image_info->pix_num - 1] += 3./16*value_error;
     if (image_info->pix_num == image_info->width) {
       UPDATE_ERROR_FLOYD
     }
@@ -409,9 +404,9 @@ void *init_error(int width, int type) {
     int i;
 
     error = (PERROR_FLOYD)malloc(sizeof(ERROR_FLOYD));
-    error->below_str = (int *)malloc(width*sizeof(int));
-    error->current_str = (int *)malloc(width*sizeof(int));
-    for (i = 0; i < width; i++) {
+    error->below_str = (int *)malloc(ERROR_SIZE(width)*sizeof(int));
+    error->current_str = (int *)malloc(ERROR_SIZE(width)*sizeof(int));
+    for (i = 0; i < ERROR_SIZE(width); i++) {
       error->current_str[i] = 0;
       error->below_str[i] = 0;
     }
